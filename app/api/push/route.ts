@@ -1,0 +1,2 @@
+import { NextResponse } from "next/server";
+export async function POST(req:Request){ const {token}=await req.json(); if(!token)return NextResponse.json({error:"token required"},{status:400}); return NextResponse.json({ok:true}); }
