@@ -73,13 +73,13 @@
       <div class="mb-5 p-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 rounded-2xl text-xs space-y-2">
         <div class="flex items-start gap-2 text-amber-800 dark:text-amber-300 font-bold">
           <i class="fa-solid fa-shield-halved mt-0.5"></i>
-          <span>[Important] Terms & Privacy Notice</span>
+          <span>【重要】利用規約とプライバシーポリシー</span>
         </div>
         <p class="text-amber-900 dark:text-amber-200 leading-relaxed">
-          ⚠️ <strong>Administrators can view message contents and account details.</strong>
+          ⚠️ <strong>管理者はメッセージの内容とアカウントの詳細を閲覧できます。</strong>
         </p>
         <p class="text-amber-700 dark:text-amber-400 leading-relaxed font-medium">
-          ⛔ <strong>Do not enter confidential data like banking credentials or confidential passwords.</strong>
+          ⛔ <strong>銀行口座情報や機密パスワードなどの機密データを入力しないでください。</strong>
         </p>
       </div>
 
@@ -87,28 +87,28 @@
       <form id="auth-form" class="space-y-3.5" onsubmit="window.handleAuthSubmit(event)">
         <!-- Real Name (Signup Only) -->
         <div id="field-realname" class="space-y-1">
-          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Real Name (Admin Verification)</label>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">実名（管理者による確認）</label>
           <div class="relative">
             <i class="fa-solid fa-user-check absolute left-3 top-3 text-gray-400 text-sm"></i>
-            <input type="text" id="input-realname" placeholder="John Doe" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
+            <input type="text" id="input-realname" placeholder="連絡太郎" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
           </div>
         </div>
 
         <!-- Display Name (Signup Only) -->
         <div id="field-displayname" class="space-y-1">
-          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Display Name (Visible Nickname)</label>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">表示名 (ニックネーム)</label>
           <div class="relative">
             <i class="fa-solid fa-face-smile absolute left-3 top-3 text-gray-400 text-sm"></i>
-            <input type="text" id="input-displayname" placeholder="Johnny" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
+            <input type="text" id="input-displayname" placeholder="れんらっくー" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
           </div>
         </div>
 
         <!-- User ID -->
         <div class="space-y-1">
-          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">User ID (Alphanumeric)</label>
+          <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">ユーザーID（英数字のみ）</label>
           <div class="relative">
             <i class="fa-solid fa-at absolute left-3 top-3 text-gray-400 text-sm"></i>
-            <input type="text" id="input-userid" required placeholder="john123" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
+            <input type="text" id="input-userid" required placeholder="renraku12" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
           </div>
         </div>
 
@@ -117,7 +117,7 @@
           <label class="block text-xs font-bold text-gray-700 dark:text-gray-300">Password</label>
           <div class="relative">
             <i class="fa-solid fa-lock absolute left-3 top-3 text-gray-400 text-sm"></i>
-            <input type="password" id="input-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
+            <input type="パスワード（英数字）" id="input-password" required placeholder="••••••••" class="w-full pl-10 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:text-white">
           </div>
         </div>
 
@@ -125,13 +125,13 @@
         <div id="field-consent" class="flex items-start gap-2 pt-1">
           <input type="checkbox" id="input-consent" class="mt-0.5 w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 cursor-pointer">
           <label for="input-consent" class="text-xs text-gray-600 dark:text-gray-400 cursor-pointer leading-tight">
-            I agree that administrators may review account data and chat logs.
+            管理者がアカウントデータやチャットログを確認する可能性があることに同意します。
           </label>
         </div>
 
         <!-- Action Button -->
         <button type="submit" id="btn-submit-auth" class="w-full py-3 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transition-all flex items-center justify-center gap-2">
-          <span>Create Account & Start</span>
+          <span>アカウントを作成して開始</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </form>
@@ -139,7 +139,7 @@
       <!-- Auth Mode Switch -->
       <div class="mt-4 text-center">
         <button type="button" onclick="window.toggleAuthMode()" id="btn-toggle-mode" class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline">
-          Already have an account? Log In
+          既にアカウントをお持ちですか？ログイン
         </button>
       </div>
     </div>
