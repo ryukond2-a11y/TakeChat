@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>takechat</title>
+  
+  <!-- PWA / iOS WebApp Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="takechat">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- Firebase SDK (v9/v10 Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+  <style>
+    /* Custom Scrollbar for Chat */
+    .chat-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .chat-scroll::-webkit-scrollbar-thumb {
+      background-color: rgba(156, 163, 175, 0.5);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200">
+
+  <!-- Header -->
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 sticky top-0 z-30 flex items-center justify-between shadow-sm">
+    <div class="flex items-center space-x-3">
+      <h1 class="text-xl font-bold text-brand-600 dark:text-brand-500 flex items-center gap-2">
+        <i class="fa-solid font-bold fa-comments"></i> takechat
+      </h1>
+      <span id="userBadge" class="hidden text-xs px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300"></span>
+    </div>
+
+    <div class="flex items-center space-x-2">
+      <!-- PWA Install Guide Button -->
+      <button id="btnPwaGuide" onclick="toggleModal('pwaModal', true)" class="text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
+        <i class="fa-solid fa-arrow-down-to-bracket text-brand-600"></i>
+        <span class="hidden sm:inline">ホーム追加</span>
+      </button>
+
+      <!-- Theme Switcher -->
+      <button id="btnTheme" onclick="toggleTheme()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg">
+        <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+      </button>
+
+      <!-- Admin Panel Switcher -->
+      <button id="btnAdmin" onclick="toggleModal('adminModal', true)" class="p-2 text-slate-400 hover:text-red-500 rounded-lg" title="開発者モード">
+        <i class="fa-solid fa-user-shield text-lg"></i>
+      </button>
+
+      <!-- Logout -->
+      <button id="btnLogout" onclick="logout()" class="hidden text-xs bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100">
+        ログアウト
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 flex flex-col max-w-5xl w-full mx-auto p-2 sm:p-4 overflow-hidden relative">
+
+    <!-- AUTH VIEW (Login / Register) -->
+    <div id="authView" class="w-full max-w-md mx-auto my-auto bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700">
+      <h2 class="text-2xl font-bold text-center mb-6 text-slate-800 dark:text-white">takechat にログイン</h2>
+      
+      <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">本名（例：山田 太郎）</label>
+          <input type="text" id="inputRealName" required class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">表示名（ニックネーム）</label>
+          <input type="text" id="inputDisplayName" required class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">パスワード</label>
+          <input type="password" id="inputPassword" required class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 outline-none">
+          <p class="text-xs text-red-500 mt-1 font-semibold">⚠️ 注意: 機密性の高いパスワードは絶対に使用しないでください。</p>
+        </div>
+
+        <!-- Consent Terms -->
+        <div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg text-xs text-slate-600 dark:text-slate-400 space-y-2 border border-slate-200 dark:border-slate-700">
+          <div class="font-bold text-slate-700 dark:text-slate-300">【重要同意事項】</div>
+          <p>本アプリ（takechat）の開発者は、管理・運用の目的により、送信されたすべてのメッセージ内容およびアカウント情報（パスワード含む）を閲覧することができます。</p>
+          <label class="flex items-start gap-2 pt-1 cursor-pointer font-semibold text-slate-800 dark:text-slate-200">
+            <input type="checkbox" id="checkConsent" required class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
+            <span>上記の内容および機密情報を送信しないことに同意します</span>
+          </label>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition-colors shadow-md">
+          ログイン / 新規登録
+        </button>
+      </form>
+    </div>
+
+    <!-- CHAT VIEW (App Core) -->
+    <div id="chatView" class="hidden flex-1 flex flex-col md:flex-row bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden h-[calc(100vh-5rem)]">
+      
+      <!-- Sidebar: Channels & Users -->
+      <aside class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-700 flex flex-col h-1/3 md:h-full">
