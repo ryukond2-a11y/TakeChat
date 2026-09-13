@@ -34,12 +34,11 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Firebase SDK (v9/v10 Compat) -->
+  <!-- Firebase SDK (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Custom Scrollbar for Chat */
     .chat-scroll::-webkit-scrollbar {
       width: 6px;
     }
@@ -61,18 +60,18 @@
     </div>
 
     <div class="flex items-center space-x-2">
-      <!-- PWA Install Guide Button -->
+      <!-- PWA Guide Button -->
       <button id="btnPwaGuide" onclick="toggleModal('pwaModal', true)" class="text-xs bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
         <i class="fa-solid fa-arrow-down-to-bracket text-brand-600"></i>
-        <span class="hidden sm:inline">ホーム追加</span>
+        <span class="hidden sm:inline">ホーム追加（通知）</span>
       </button>
 
-      <!-- Theme Switcher -->
+      <!-- Theme Switcher (Default Light) -->
       <button id="btnTheme" onclick="toggleTheme()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg">
         <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
       </button>
 
-      <!-- Admin Panel Switcher -->
+      <!-- Admin Panel Button -->
       <button id="btnAdmin" onclick="toggleModal('adminModal', true)" class="p-2 text-slate-400 hover:text-red-500 rounded-lg" title="開発者モード">
         <i class="fa-solid fa-user-shield text-lg"></i>
       </button>
@@ -105,27 +104,397 @@
         <div>
           <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">パスワード</label>
           <input type="password" id="inputPassword" required class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 focus:ring-2 focus:ring-brand-500 outline-none">
-          <p class="text-xs text-red-500 mt-1 font-semibold">⚠️ 注意: 機密性の高いパスワードは絶対に使用しないでください。</p>
+          <p class="text-xs text-red-500 mt-1 font-semibold">⚠️ パスワードのところに機密性のものは入れるな</p>
         </div>
 
         <!-- Consent Terms -->
         <div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg text-xs text-slate-600 dark:text-slate-400 space-y-2 border border-slate-200 dark:border-slate-700">
           <div class="font-bold text-slate-700 dark:text-slate-300">【重要同意事項】</div>
-          <p>本アプリ（takechat）の開発者は、管理・運用の目的により、送信されたすべてのメッセージ内容およびアカウント情報（パスワード含む）を閲覧することができます。</p>
+          <p>開発者がメッセージの内容とパスワードを見ることができます。理解・同意の上でご利用ください。</p>
           <label class="flex items-start gap-2 pt-1 cursor-pointer font-semibold text-slate-800 dark:text-slate-200">
             <input type="checkbox" id="checkConsent" required class="mt-0.5 rounded border-slate-300 text-brand-600 focus:ring-brand-500">
-            <span>上記の内容および機密情報を送信しないことに同意します</span>
+            <span>上記に同意し、機密情報を入力しないことに同意します</span>
           </label>
         </div>
 
         <button type="submit" class="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-lg transition-colors shadow-md">
-          ログイン / 新規登録
+          ログイン / 参加する
         </button>
       </form>
     </div>
 
-    <!-- CHAT VIEW (App Core) -->
+    <!-- CHAT VIEW -->
     <div id="chatView" class="hidden flex-1 flex flex-col md:flex-row bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden h-[calc(100vh-5rem)]">
       
-      <!-- Sidebar: Channels & Users -->
+      <!-- Sidebar -->
       <aside class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-700 flex flex-col h-1/3 md:h-full">
+        <div class="p-3 border-b border-slate-200 dark:border-slate-700 font-bold text-xs uppercase text-slate-400">
+          チャンネル & 個チャ
+        </div>
+        <div class="flex-1 overflow-y-auto p-2 space-y-1">
+          <button onclick="switchChannel('group', '全員グループ')" id="chan-group" class="w-full text-left px-3 py-2 rounded-lg font-medium flex items-center justify-between bg-brand-50 dark:bg-slate-700 text-brand-600 dark:text-brand-400">
+            <span><i class="fa-solid fa-users mr-2"></i>全員グループ</span>
+          </button>
+          
+          <div class="pt-2 text-[10px] font-bold uppercase text-slate-400 px-3">個別チャット（個チャ）</div>
+          <div id="userList" class="space-y-1"></div>
+        </div>
+      </aside>
+
+      <!-- Main Chat Area -->
+      <section class="flex-1 flex flex-col h-2/3 md:h-full bg-white dark:bg-slate-800">
+        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800">
+          <h3 id="currentChatTitle" class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
+            全員グループ
+          </h3>
+          <span id="statusIndicator" class="text-xs text-green-500 font-semibold">● オンライン</span>
+        </div>
+
+        <div id="messageList" class="flex-1 overflow-y-auto p-4 space-y-4 chat-scroll"></div>
+
+        <div id="imagePreviewContainer" class="hidden px-4 py-2 bg-slate-100 dark:bg-slate-700 flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <img id="imgPreview" class="h-12 w-12 object-cover rounded border">
+            <span class="text-xs text-slate-500 dark:text-slate-300">画像を送信準備中...</span>
+          </div>
+          <button onclick="cancelImage()" class="text-red-500 hover:text-red-700 text-xs">キャンセル</button>
+        </div>
+
+        <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+          <form onsubmit="sendMessage(event)" class="flex items-center space-x-2">
+            <label class="p-2 text-slate-400 hover:text-brand-600 cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
+              <i class="fa-solid fa-image text-xl"></i>
+              <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)" class="hidden">
+            </label>
+            <input type="text" id="messageInput" placeholder="メッセージを入力..." class="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-brand-500">
+            <button type="submit" class="p-2.5 bg-brand-600 hover:bg-brand-700 text-white rounded-full transition-colors shadow">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <!-- PWA Modal -->
+  <div id="pwaModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 max-w-sm w-full p-6 rounded-2xl shadow-2xl relative">
+      <button onclick="toggleModal('pwaModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-brand-600">
+        <i class="fa-solid fa-mobile-screen"></i> ホーム画面に追加（常時通知）
+      </h3>
+      <p class="text-xs text-slate-600 dark:text-slate-300 mb-4">
+        iPadでLINEのように通知を常時受け取るには、アプリをホーム画面に追加（PWA化）してください。
+      </p>
+      <ol class="text-xs space-y-3 text-slate-700 dark:text-slate-200 border-l-2 border-brand-500 pl-3">
+        <li>1. Safariの **「共有アイコン（四角から矢印）」** をタップ</li>
+        <li>2. **「ホーム画面に追加」** を選択</li>
+        <li>3. 右上の **「追加」** をタップ</li>
+      </ol>
+      <button onclick="toggleModal('pwaModal', false)" class="mt-6 w-full py-2 bg-brand-600 text-white text-xs font-bold rounded-lg">
+        理解しました
+      </button>
+    </div>
+  </div>
+
+  <!-- Lightbox Modal -->
+  <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="toggleModal('imageModal', false)">
+    <img id="lightboxImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
+  </div>
+
+  <!-- Admin Panel Modal -->
+  <div id="adminModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[80vh] flex flex-col">
+      <button onclick="toggleModal('adminModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark text-xl"></i>
+      </button>
+      <h3 class="text-lg font-bold mb-2 text-red-600 flex items-center gap-2">
+        <i class="fa-solid fa-user-shield"></i> 開発者管理者パネル
+      </h3>
+      <p class="text-xs text-slate-500 mb-4">規約同意に基づき、全ユーザーのパスワードおよびメッセージ履歴を表示できます。</p>
+      
+      <div class="flex-1 overflow-y-auto space-y-4 text-xs">
+        <div class="border dark:border-slate-700 rounded-lg p-3">
+          <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1">登録ユーザー＆パスワード一覧</h4>
+          <div id="adminUserList" class="space-y-1 font-mono">データ取得中...</div>
+        </div>
+        <div class="border dark:border-slate-700 rounded-lg p-3">
+          <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1">全メッセージログ</h4>
+          <div id="adminMsgList" class="space-y-1 font-mono max-h-48 overflow-y-auto">データ取得中...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Firebase Configuration ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyAYn8j8VlMy0FDoQ1ASaOzM6Rh1JK7aqb8",
+      authDomain: "takechat-fbd46.firebaseapp.com",
+      projectId: "takechat-fbd46",
+      storageBucket: "takechat-fbd46.firebasestorage.app",
+      messagingSenderId: "494579571970",
+      appId: "1:494579571970:web:1a489c77371d976780761b",
+      measurementId: "G-6L80JJ0SXV"
+    };
+
+    let db = null;
+    let isFirebaseReady = false;
+
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+      isFirebaseReady = true;
+    } catch(e) {
+      console.error("Firebase init fallback:", e);
+    }
+
+    // App State
+    let currentUser = null;
+    let currentChannel = 'group';
+    let selectedImageBase64 = null;
+    let allUsers = [];
+    let allMessages = [];
+
+    const notifyAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+
+    function toggleTheme() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun text-yellow-400 text-lg' : 'fa-solid fa-moon text-lg';
+    }
+
+    function toggleModal(id, show) {
+      document.getElementById(id).classList.toggle('hidden', !show);
+      if (id === 'adminModal' && show) renderAdminData();
+    }
+
+    // Auth Processing
+    async function handleAuth(e) {
+      e.preventDefault();
+      const realName = document.getElementById('inputRealName').value.trim();
+      const displayName = document.getElementById('inputDisplayName').value.trim();
+      const password = document.getElementById('inputPassword').value.trim();
+
+      if(!realName || !displayName || !password) return;
+
+      currentUser = { realName, displayName, password };
+
+      // UI Transition immediately
+      document.getElementById('authView').classList.add('hidden');
+      document.getElementById('chatView').classList.remove('hidden');
+      document.getElementById('btnLogout').classList.remove('hidden');
+      document.getElementById('userBadge').innerText = `\({displayName} (\){realName})`;
+      document.getElementById('userBadge').classList.remove('hidden');
+
+      if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
+
+      // Save user to Firestore asynchronously
+      if(isFirebaseReady) {
+        try {
+          await db.collection('users').doc(displayName).set({
+            realName, displayName, password, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
+        } catch(err) {
+          console.warn("User save failed, using local mode:", err);
+        }
+      }
+
+      initChatListeners();
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('authView').classList.remove('hidden');
+      document.getElementById('chatView').classList.add('hidden');
+      document.getElementById('btnLogout').classList.add('hidden');
+      document.getElementById('userBadge').classList.add('hidden');
+    }
+
+    function switchChannel(type, title) {
+      currentChannel = type;
+      document.getElementById('currentChatTitle').innerHTML = type === 'group' 
+        ? `<i class="fa-solid fa-users text-brand-600"></i> 全員グループ` 
+        : `<i class="fa-solid fa-user text-brand-600"></i> ${title}`;
+      renderMessages();
+    }
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 800;
+
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          selectedImageBase64 = canvas.toDataURL('image/jpeg', 0.6);
+          document.getElementById('imgPreview').src = selectedImageBase64;
+          document.getElementById('imagePreviewContainer').classList.remove('hidden');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function cancelImage() {
+      selectedImageBase64 = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('imagePreviewContainer').classList.add('hidden');
+    }
+
+    async function sendMessage(e) {
+      e.preventDefault();
+      const input = document.getElementById('messageInput');
+      const text = input.value.trim();
+
+      if(!text && !selectedImageBase64) return;
+
+      const msgData = {
+        sender: currentUser.displayName,
+        senderRealName: currentUser.realName,
+        text: text || '',
+        image: selectedImageBase64 || null,
+        target: currentChannel,
+        createdAt: isFirebaseReady ? firebase.firestore.FieldValue.serverTimestamp() : new Date().getTime()
+      };
+
+      input.value = '';
+      const imgTemp = selectedImageBase64;
+      cancelImage();
+
+      if(isFirebaseReady) {
+        try {
+          await db.collection('messages').add(msgData);
+        } catch(err) {
+          console.error("Failed to send message:", err);
+        }
+      } else {
+        allMessages.push({...msgData, id: Date.now().toString()});
+        renderMessages();
+      }
+    }
+
+    function initChatListeners() {
+      if(!isFirebaseReady) return;
+
+      // Firestore realtime listeners
+      db.collection('users').onSnapshot(snapshot => {
+        allUsers = snapshot.docs.map(doc => doc.data());
+        renderUserList();
+      }, err => console.warn("User listener error:", err));
+
+      db.collection('messages').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
+        const newMsgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if(newMsgs.length > allMessages.length && allMessages.length > 0) {
+          const latest = newMsgs[newMsgs.length - 1];
+          if(latest.sender !== currentUser.displayName) {
+            playNotification(latest);
+          }
+        }
+        allMessages = newMsgs;
+        renderMessages();
+      }, err => console.warn("Msg listener error:", err));
+    }
+
+    function playNotification(msg) {
+      try { notifyAudio.play(); } catch(e){}
+      if ("Notification" in window && Notification.permission === "granted") {
+        new Notification(`takechat: ${msg.sender}`, {
+          body: msg.text || '📷 画像が送信されました'
+        });
+      }
+    }
+
+    function renderUserList() {
+      const container = document.getElementById('userList');
+      container.innerHTML = '';
+
+      allUsers.filter(u => u.displayName !== currentUser.displayName).forEach(u => {
+        const btn = document.createElement('button');
+        btn.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700";
+        btn.onclick = () => switchChannel(u.displayName, u.displayName);
+        btn.innerHTML = `<span class="truncate"><i class="fa-regular fa-user mr-2"></i>${u.displayName}</span>`;
+        container.appendChild(btn);
+      });
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('messageList');
+      container.innerHTML = '';
+
+      const filtered = allMessages.filter(m => {
+        if(currentChannel === 'group') return m.target === 'group';
+        return (m.sender === currentUser.displayName && m.target === currentChannel) ||
+               (m.sender === currentChannel && m.target === currentUser.displayName);
+      });
+
+      filtered.forEach(m => {
+        const isMe = m.sender === currentUser.displayName;
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex flex-col ${isMe ? 'items-end' : 'items-start'}`;
+
+        const info = document.createElement('span');
+        info.className = "text-[10px] text-slate-400 mb-0.5 px-1";
+        info.innerText = `\({m.sender} (\){m.senderRealName || ''})`;
+
+        const bubble = document.createElement('div');
+        bubble.className = `max-w-[75%] p-3 rounded-2xl text-sm ${
+          isMe 
+            ? 'bg-brand-600 text-white rounded-br-none' 
+            : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none'
+        }`;
+
+        if(m.text) {
+          const p = document.createElement('p');
+          p.innerText = m.text;
+          bubble.appendChild(p);
+        }
+
+        if(m.image) {
+          const img = document.createElement('img');
+          img.src = m.image;
+          img.className = "mt-2 rounded-lg max-h-48 object-cover cursor-pointer";
+          img.onclick = () => {
+            document.getElementById('lightboxImg').src = m.image;
+            toggleModal('imageModal', true);
+          };
+          bubble.appendChild(img);
+        }
+
+        wrapper.appendChild(info);
+        wrapper.appendChild(bubble);
+        container.appendChild(wrapper);
+      });
+
+      container.scrollTop = container.scrollHeight;
+    }
+
+    function renderAdminData() {
+      const userBox = document.getElementById('adminUserList');
+      const msgBox = document.getElementById('adminMsgList');
+
+      userBox.innerHTML = allUsers.map(u => 
+        `
