@@ -36,21 +36,21 @@
   <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 sticky top-0 z-30 flex items-center justify-between shadow-sm">
     <div class="flex items-center space-x-3">
       <h1 class="text-xl font-bold text-sky-600 dark:text-sky-400 flex items-center gap-2">
-        <i class="fa-solid fa-comments"></i> takechat
+        <i class="fa-solid font-bold fa-comments"></i> takechat
       </h1>
       <span id="userBadge" class="hidden text-xs px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300"></span>
     </div>
 
     <div class="flex items-center space-x-2">
-      <!-- Notification Toggle -->
-      <button id="btnSoundToggle" onclick="toggleSound()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg" title="通知音切替">
+      <!-- Notification Sound Switch -->
+      <button id="btnSoundToggle" onclick="toggleSoundPreference()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg" title="通知音切替">
         <i id="soundIcon" class="fa-solid fa-bell text-lg"></i>
       </button>
 
-      <!-- PWA Guide Button (iOS Dedicated) -->
+      <!-- PWA Guide Button (iOS) -->
       <button id="btnPwaGuide" onclick="toggleModal('pwaModal', true)" class="text-xs bg-slate-100 dark:bg-slate-700 dark:text-white hover:bg-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
         <i class="fa-solid fa-arrow-down-to-bracket text-sky-600"></i>
-        <span class="hidden sm:inline">ホーム追加(iOS)</span>
+        <span class="hidden sm:inline">ホーム画面に追加</span>
       </button>
 
       <!-- Theme Switcher -->
@@ -58,13 +58,8 @@
         <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
       </button>
 
-      <!-- Firebase Config Button (Requires Admin Pass) -->
-      <button onclick="openFirebaseConfigWithAuth()" class="p-2 text-slate-400 hover:text-sky-500 rounded-lg" title="Firebase設定">
-        <i class="fa-solid fa-gear text-lg"></i>
-      </button>
-
       <!-- Admin Panel Button -->
-      <button id="btnAdmin" onclick="openAdminModalWithAuth()" class="p-2 text-slate-400 hover:text-red-500 rounded-lg" title="管理者ページ">
+      <button id="btnAdmin" onclick="openAdminModal()" class="p-2 text-slate-400 hover:text-red-500 rounded-lg" title="管理者ページ">
         <i class="fa-solid fa-user-shield text-lg"></i>
       </button>
 
@@ -99,6 +94,7 @@
           <p class="text-xs text-red-500 mt-1 font-semibold">⚠️ パスワードのところに機密性のものは入れないで下さい</p>
         </div>
 
+        <!-- Consent Terms -->
         <div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg text-xs text-slate-600 dark:text-slate-400 space-y-2 border border-slate-200 dark:border-slate-700">
           <div class="font-bold text-slate-700 dark:text-slate-300">【重要同意事項】</div>
           <p>開発者がメッセージの内容とパスワードを見ることができます。同意の上ご利用ください。</p>
@@ -120,33 +116,24 @@
       <!-- Sidebar -->
       <aside class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-700 flex flex-col h-1/3 md:h-full">
         <div class="p-3 border-b border-slate-200 dark:border-slate-700 font-bold text-xs uppercase text-slate-400 flex justify-between items-center">
-          <span>チャンネル＆個別チャット</span>
-          <button onclick="toggleModal('inviteModal', true)" class="text-sky-600 hover:text-sky-700 text-xs" title="招待リンク">
-            <i class="fa-solid fa-user-plus"></i> 招待
-          </button>
+          <span>チャンネル & 個別チャット</span>
         </div>
-        
         <div class="flex-1 overflow-y-auto p-2 space-y-1">
-          <!-- General Channel -->
-          <button onclick="switchChannel('group', '一般')" id="chan-group" class="w-full text-left px-3 py-2 rounded-lg font-medium flex items-center justify-between bg-sky-50 dark:bg-slate-700 text-sky-600 dark:text-sky-400">
+          <button onclick="switchChannel('general', '一般')" id="chan-general" class="w-full text-left px-3 py-2 rounded-lg font-medium flex items-center justify-between bg-sky-50 dark:bg-slate-700 text-sky-600 dark:text-sky-400">
             <span><i class="fa-solid fa-users mr-2"></i>一般</span>
           </button>
           
-          <div class="pt-3 pb-1 text-[10px] font-bold uppercase text-slate-400 px-3 flex justify-between items-center">
+          <div class="pt-2 text-[10px] font-bold uppercase text-slate-400 px-3 flex justify-between items-center">
             <span>個別チャット</span>
-            <button onclick="toggleModal('requestChatModal', true)" class="text-sky-600 hover:underline text-[11px] font-normal">
-              + チャット申請
-            </button>
           </div>
 
-          <!-- Direct Messages List -->
+          <!-- Direct Chat Requests -->
+          <div id="chatRequestsContainer" class="hidden space-y-1 pt-1">
+            <div class="text-[10px] font-bold text-amber-500 px-3">届いているリクエスト</div>
+            <div id="requestList" class="space-y-1"></div>
+          </div>
+
           <div id="userList" class="space-y-1"></div>
-
-          <!-- Pending Requests List -->
-          <div id="pendingRequestsContainer" class="hidden pt-2">
-            <div class="text-[10px] font-bold text-amber-600 dark:text-amber-400 px-3 mb-1">承認待ちのリクエスト</div>
-            <div id="pendingRequestsList" class="space-y-1"></div>
-          </div>
         </div>
       </aside>
 
@@ -187,58 +174,26 @@
 
   </main>
 
-  <!-- iOS PWA Modal -->
+  <!-- PWA Modal (iOS Focused) -->
   <div id="pwaModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 max-w-sm w-full p-6 rounded-2xl shadow-2xl relative">
       <button onclick="toggleModal('pwaModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
       <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-sky-600 dark:text-sky-400">
-        <i class="fa-solid fa-mobile-screen"></i> ホーム画面に追加 (iOS専用)
+        <i class="fa-solid fa-mobile-screen"></i> ホーム画面に追加（iOS手順）
       </h3>
       <p class="text-xs text-slate-600 dark:text-slate-300 mb-4">
-        iPhone / iPad で通知を受け取るには、Safariでアプリをホーム画面に追加してください。
+        iOS (Safari) でアプリのように通知を常時受け取り、全画面で快適に使用するための手順です。
       </p>
       <ol class="text-xs space-y-3 text-slate-700 dark:text-slate-200 border-l-2 border-sky-500 pl-3">
-        <li>1. Safari 下部（iPadは上部）の <b>「共有アイコン（四角から矢印）」</b> をタップ</li>
+        <li>1. Safari画面下の <b>「共有アイコン（四角から矢印）」</b> をタップ</li>
         <li>2. メニューから <b>「ホーム画面に追加」</b> を選択</li>
-        <li>3. 右上の <b>「追加」</b> をタップ</li>
+        <li>3. 右上の <b>「追加」</b> をタップして完了</li>
       </ol>
       <button onclick="toggleModal('pwaModal', false)" class="mt-6 w-full py-2 bg-sky-600 text-white text-xs font-bold rounded-lg">
-        理解しました
+        閉じる
       </button>
-    </div>
-  </div>
-
-  <!-- Invite Link Modal -->
-  <div id="inviteModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 max-w-sm w-full p-6 rounded-2xl shadow-2xl relative">
-      <button onclick="toggleModal('inviteModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark text-xl"></i>
-      </button>
-      <h3 class="text-lg font-bold mb-3 text-slate-800 dark:text-white flex items-center gap-2">
-        <i class="fa-solid fa-user-plus text-sky-600"></i> メンバーを招待
-      </h3>
-      <p class="text-xs text-slate-500 mb-4">以下のリンクを共有してチャットに招待できます。</p>
-      <div class="flex gap-2">
-        <input type="text" id="inviteUrlInput" readonly class="flex-1 text-xs px-3 py-2 bg-slate-100 dark:bg-slate-700 dark:text-white rounded border border-slate-300 dark:border-slate-600">
-        <button onclick="copyInviteUrl()" class="px-3 py-2 bg-sky-600 text-white text-xs font-bold rounded hover:bg-sky-700">コピー</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Direct Chat Request Modal -->
-  <div id="requestChatModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 max-w-sm w-full p-6 rounded-2xl shadow-2xl relative">
-      <button onclick="toggleModal('requestChatModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark text-xl"></i>
-      </button>
-      <h3 class="text-lg font-bold mb-3 text-slate-800 dark:text-white flex items-center gap-2">
-        <i class="fa-solid fa-comments text-sky-600"></i> 個別チャットの申請
-      </h3>
-      <p class="text-xs text-slate-500 mb-4">チャットしたい相手を選択して申請を送ります。相手が承認すると個別チャットが開始されます。</p>
-      
-      <div id="availableUsersForRequest" class="max-h-48 overflow-y-auto space-y-2 mb-4"></div>
     </div>
   </div>
 
@@ -247,237 +202,182 @@
     <img id="lightboxImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
   </div>
 
-  <!-- Firebase Config Modal (Admin Protection) -->
-  <div id="firebaseModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 max-w-md w-full p-6 rounded-2xl shadow-2xl relative">
-      <button onclick="toggleModal('firebaseModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
-        <i class="fa-solid fa-xmark text-xl"></i>
+  <!-- Admin Password Auth Modal -->
+  <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 max-w-xs w-full p-5 rounded-2xl shadow-2xl relative">
+      <button onclick="toggleModal('adminAuthModal', false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
+        <i class="fa-solid fa-xmark"></i>
       </button>
-      <h3 class="text-lg font-bold mb-3 text-slate-800 dark:text-white flex items-center gap-2">
-        <i class="fa-solid fa-fire text-amber-500"></i> Firebase設定（管理者専用）
+      <h3 class="text-base font-bold mb-3 text-red-600 flex items-center gap-1.5">
+        <i class="fa-solid fa-lock"></i> 管理者パスワードの入力
       </h3>
-      <p class="text-xs text-slate-500 mb-4">管理者が一度設定すれば、全ユーザーに適用されます。</p>
-
-      <form onsubmit="saveFirebaseConfig(event)" class="space-y-3">
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500">API Key</label>
-          <input type="text" id="cfgApiKey" required class="w-full text-xs px-3 py-1.5 border rounded dark:bg-slate-700 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500">Auth Domain</label>
-          <input type="text" id="cfgAuthDomain" required class="w-full text-xs px-3 py-1.5 border rounded dark:bg-slate-700 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500">Project ID</label>
-          <input type="text" id="cfgProjectId" required class="w-full text-xs px-3 py-1.5 border rounded dark:bg-slate-700 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500">Storage Bucket</label>
-          <input type="text" id="cfgStorageBucket" class="w-full text-xs px-3 py-1.5 border rounded dark:bg-slate-700 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500">Messaging Sender ID</label>
-          <input type="text" id="cfgMessagingSenderId" class="w-full text-xs px-3 py-1.5 border rounded dark:bg-slate-700 dark:text-white">
-        </div>
-        <div>
-          <label class="block text-[10px] font-bold text-slate-500">App ID</label>
-          <input type="text" id="cfgAppId" required class="w-full text-xs px-3 py-1.5 border rounded dark:bg-slate-700 dark:text-white">
-        </div>
-
-        <button type="submit" class="w-full py-2 bg-sky-600 text-white text-xs font-bold rounded-lg hover:bg-sky-700">
-          設定を保存して初期化
-        </button>
-      </form>
+      <input type="password" id="inputAdminPass" placeholder="パスワードを入力" class="w-full px-3 py-2 border rounded-lg dark:bg-slate-700 dark:text-white dark:border-slate-600 mb-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-500">
+      <button onclick="verifyAdminPassword()" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg text-xs">
+        認証
+      </button>
     </div>
   </div>
 
   <!-- Admin Panel Modal -->
   <div id="adminModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 max-w-3xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[85vh] flex flex-col">
+    <div class="bg-white dark:bg-slate-800 max-w-2xl w-full p-6 rounded-2xl shadow-2xl relative max-h-[85vh] flex flex-col">
       <button onclick="toggleModal('adminModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
       <h3 class="text-lg font-bold mb-2 text-red-600 flex items-center gap-2">
-        <i class="fa-solid fa-user-shield"></i> 管理者ページ
+        <i class="fa-solid fa-user-shield"></i> 開発者管理者ページ
       </h3>
+
+      <!-- Admin Tabs -->
+      <div class="flex border-b border-slate-200 dark:border-slate-700 mb-4 text-xs font-bold space-x-4">
+        <button onclick="switchAdminTab('data')" id="tabBtnData" class="pb-2 border-b-2 border-red-500 text-red-600">データ・ログ確認</button>
+        <button onclick="switchAdminTab('firebase')" id="tabBtnFirebase" class="pb-2 border-b-2 border-transparent text-slate-400">Firebase設定</button>
+        <button onclick="switchAdminTab('version')" id="tabBtnVersion" class="pb-2 border-b-2 border-transparent text-slate-400">バージョン履歴</button>
+      </div>
       
-      <!-- Admin Navigation Tabs -->
-      <div class="flex border-b dark:border-slate-700 mb-3 gap-2">
-        <button onclick="switchAdminTab('data')" id="tabBtnData" class="px-3 py-1.5 text-xs font-bold border-b-2 border-red-500 text-red-600">ユーザー＆メッセージ管理</button>
-        <button onclick="switchAdminTab('history')" id="tabBtnHistory" class="px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700">バージョン履歴</button>
-      </div>
+      <div class="flex-1 overflow-y-auto space-y-4 text-xs dark:text-slate-200">
+        <!-- Tab: Data -->
+        <div id="adminTabContentData" class="space-y-4">
+          <div class="border dark:border-slate-700 rounded-lg p-3">
+            <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1">登録ユーザー＆パスワード一覧</h4>
+            <div id="adminUserList" class="space-y-1 font-mono">データ取得中...</div>
+          </div>
+          <div class="border dark:border-slate-700 rounded-lg p-3">
+            <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1">全メッセージログ（個別チャット含む）</h4>
+            <div id="adminMsgList" class="space-y-1 font-mono max-h-48 overflow-y-auto">データ取得中...</div>
+          </div>
+        </div>
 
-      <!-- Tab: User & Message Data -->
-      <div id="adminTabData" class="flex-1 overflow-y-auto space-y-4 text-xs dark:text-slate-200">
-        <div class="border dark:border-slate-700 rounded-lg p-3 bg-slate-50 dark:bg-slate-900/50">
-          <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1 text-slate-700 dark:text-slate-300">登録ユーザー＆パスワード一覧</h4>
-          <div id="adminUserList" class="space-y-1 font-mono">データ取得中...</div>
+        <!-- Tab: Firebase Config -->
+        <div id="adminTabContentFirebase" class="hidden space-y-3">
+          <p class="text-xs text-slate-500">Firebase設定（全体共通）。一度管理者が設定すると全ユーザーに適用されます。</p>
+          <textarea id="adminFirebaseJson" rows="8" class="w-full font-mono text-xs p-2 border rounded-lg dark:bg-slate-900 dark:border-slate-700 text-slate-800 dark:text-slate-200" placeholder="Firebase config JSON"></textarea>
+          <button onclick="saveAdminFirebaseConfig()" class="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold">設定を保存</button>
         </div>
-        <div class="border dark:border-slate-700 rounded-lg p-3 bg-slate-50 dark:bg-slate-900/50">
-          <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1 text-slate-700 dark:text-slate-300">全メッセージログ確認（全チャンネル）</h4>
-          <div id="adminMsgList" class="space-y-1 font-mono max-h-60 overflow-y-auto">データ取得中...</div>
-        </div>
-      </div>
 
-      <!-- Tab: Version History -->
-      <div id="adminTabHistory" class="hidden flex-1 overflow-y-auto space-y-3 text-xs dark:text-slate-200">
-        <div class="p-3 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 space-y-2">
-          <div class="font-bold text-sky-600">v2.1.0 - 2026-09-19 (最新アップデート)</div>
-          <ul class="list-disc pl-4 space-y-1 text-slate-600 dark:text-slate-300">
-            <li>管理者パスワード認証 (`admin20130407`) の判定精度・トリム修復</li>
-            <li>Firebase設定変更時の管理者パスワード要求ガード追加</li>
-            <li>個別チャットの勝手接続防止・申請＆承認制度の導入</li>
-            <li>iOS専用のホーム画面追加（PWA）ガイドの最適化</li>
-            <li>管理者ページからの全メッセージ一括監視機能</li>
-            <li>自分のメッセージ送信時の通知（ポップアップ・音声）ガード</li>
-          </ul>
-        </div>
-        <div class="p-3 border dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-900/50 space-y-2">
-          <div class="font-bold text-slate-600 dark:text-slate-400">v2.0.0 - 2026-09-18</div>
-          <ul class="list-disc pl-4 space-y-1 text-slate-500">
-            <li>管理者のFirebase設定共有機能実装</li>
-            <li>デフォルトグループを「一般」に統一</li>
-            <li>通知音切替機能および通知権限モーダル追加</li>
-          </ul>
+        <!-- Tab: Version -->
+        <div id="adminTabContentVersion" class="hidden space-y-2">
+          <div class="p-2 border-b dark:border-slate-700">
+            <span class="font-bold">v2.5.0</span> - 個別チャットリクエスト制、管理者保護の完全統合
+          </div>
+          <div class="p-2 border-b dark:border-slate-700">
+            <span class="font-bold">v2.0.0</span> - Firebase連携・管理者モードの追加
+          </div>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // --- Default Firebase Config ---
-    const defaultFirebaseConfig = {
+    // --- Firebase Configuration ---
+    let firebaseConfig = {
       apiKey: "AIzaSyAYn8j8VlMy0FDoQ1ASaOzM6Rh1JK7aqb8",
       authDomain: "takechat-fbd46.firebaseapp.com",
       projectId: "takechat-fbd46",
       storageBucket: "takechat-fbd46.firebasestorage.app",
       messagingSenderId: "494579571970",
-      appId: "1:494579571970:web:1a489c77371d976780761b"
+      appId: "1:494579571970:web:1a489c77371d976780761b",
+      measurementId: "G-6L80JJ0SXV"
     };
+
+    // Load override from LocalStorage if provided by Admin
+    const customConfig = localStorage.getItem('takechat_custom_firebase');
+    if(customConfig) {
+      try { firebaseConfig = JSON.parse(customConfig); } catch(e){}
+    }
 
     let db = null;
     let isFirebaseReady = false;
 
-    function getStoredFirebaseConfig() {
-      const saved = localStorage.getItem('takechat_firebase_config');
-      if (saved) {
-        try { return JSON.parse(saved); } catch(e){}
+    try {
+      if (typeof firebase !== 'undefined') {
+        firebase.initializeApp(firebaseConfig);
+        db = firebase.firestore();
+        isFirebaseReady = true;
       }
-      return defaultFirebaseConfig;
+    } catch(e) {
+      console.warn("Firebase init fallback:", e);
     }
-
-    function initFirebase() {
-      const config = getStoredFirebaseConfig();
-      try {
-        if (typeof firebase !== 'undefined') {
-          if (!firebase.apps.length) {
-            firebase.initializeApp(config);
-          }
-          db = firebase.firestore();
-          isFirebaseReady = true;
-        }
-      } catch(e) {
-        console.warn("Firebase Init fallback:", e);
-      }
-    }
-
-    initFirebase();
 
     // App State
     let currentUser = null;
-    let currentChannel = 'group'; // 'group' or target user displayName
+    let currentChannel = 'general';
     let selectedImageBase64 = null;
     let allUsers = [];
     let allMessages = [];
-    let chatRequests = []; // Direct chat requests
-    let soundEnabled = localStorage.getItem('takechat_sound') !== 'false';
+    let directRequests = [];
+    let soundEnabled = true;
+    let isAdminAuthenticated = false;
 
-    const ADMIN_PASS = 'admin20130407';
     const notifyAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
-    // On Load Check for iOS Guide
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('inviteUrlInput').value = window.location.href;
-      updateSoundIcon();
-
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      if (isIOS && !window.navigator.standalone) {
-        toggleModal('pwaModal', true);
+      // Auto open iOS Guide on start
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        setTimeout(() => toggleModal('pwaModal', true), 1000);
       }
     });
 
-    // Theme Switcher
     function toggleTheme() {
       const isDark = document.documentElement.classList.toggle('dark');
       document.getElementById('themeIcon').className = isDark ? 'fa-solid fa-sun text-yellow-400 text-lg' : 'fa-solid fa-moon text-lg';
     }
 
-    // Sound Notification Toggle
-    function toggleSound() {
+    function toggleSoundPreference() {
       soundEnabled = !soundEnabled;
-      localStorage.setItem('takechat_sound', soundEnabled);
-      updateSoundIcon();
-    }
-
-    function updateSoundIcon() {
       const icon = document.getElementById('soundIcon');
-      if (soundEnabled) {
-        icon.className = 'fa-solid fa-bell text-sky-600 text-lg';
-      } else {
-        icon.className = 'fa-solid fa-bell-slash text-slate-400 text-lg';
-      }
+      icon.className = soundEnabled ? 'fa-solid fa-bell text-lg' : 'fa-solid fa-bell-slash text-lg text-slate-400';
     }
 
-    // Modal Manager
     function toggleModal(id, show) {
       document.getElementById(id).classList.toggle('hidden', !show);
       if (id === 'adminModal' && show) renderAdminData();
-      if (id === 'requestChatModal' && show) renderAvailableUsersForRequest();
     }
 
-    // Admin Password Protection
-    function openAdminModalWithAuth() {
-      const pass = prompt("管理者パスワードを入力してください:");
-      if (pass && pass.trim() === ADMIN_PASS) {
+    function openAdminModal() {
+      if (!isAdminAuthenticated) {
+        document.getElementById('inputAdminPass').value = '';
+        toggleModal('adminAuthModal', true);
+      } else {
         toggleModal('adminModal', true);
-      } else if (pass !== null) {
-        alert("パスワードが正しくありません。");
       }
     }
 
-    function openFirebaseConfigWithAuth() {
-      const pass = prompt("Firebase設定を変更するには管理者パスワードを入力してください:");
-      if (pass && pass.trim() === ADMIN_PASS) {
-        const cfg = getStoredFirebaseConfig();
-        document.getElementById('cfgApiKey').value = cfg.apiKey || '';
-        document.getElementById('cfgAuthDomain').value = cfg.authDomain || '';
-        document.getElementById('cfgProjectId').value = cfg.projectId || '';
-        document.getElementById('cfgStorageBucket').value = cfg.storageBucket || '';
-        document.getElementById('cfgMessagingSenderId').value = cfg.messagingSenderId || '';
-        document.getElementById('cfgAppId').value = cfg.appId || '';
-        toggleModal('firebaseModal', true);
-      } else if (pass !== null) {
-        alert("パスワードが正しくありません。");
+    function verifyAdminPassword() {
+      const input = document.getElementById('inputAdminPass').value.trim();
+      if (input === 'admin20130407') {
+        isAdminAuthenticated = true;
+        toggleModal('adminAuthModal', false);
+        toggleModal('adminModal', true);
+      } else {
+        alert('管理者パスワードが違います。');
       }
     }
 
-    function saveFirebaseConfig(e) {
-      e.preventDefault();
-      const config = {
-        apiKey: document.getElementById('cfgApiKey').value.trim(),
-        authDomain: document.getElementById('cfgAuthDomain').value.trim(),
-        projectId: document.getElementById('cfgProjectId').value.trim(),
-        storageBucket: document.getElementById('cfgStorageBucket').value.trim(),
-        messagingSenderId: document.getElementById('cfgMessagingSenderId').value.trim(),
-        appId: document.getElementById('cfgAppId').value.trim()
-      };
-
-      localStorage.setItem('takechat_firebase_config', JSON.stringify(config));
-      alert("Firebase設定を保存しました。ページをリロードします。");
-      window.location.reload();
+    function switchAdminTab(tab) {
+      ['Data', 'Firebase', 'Version'].forEach(t => {
+        const isSelected = t.toLowerCase() === tab;
+        document.getElementById(`adminTabContent${t}`).classList.toggle('hidden', !isSelected);
+        const btn = document.getElementById(`tabBtn${t}`);
+        btn.className = isSelected ? 'pb-2 border-b-2 border-red-500 text-red-600' : 'pb-2 border-b-2 border-transparent text-slate-400';
+      });
+      if(tab === 'firebase') {
+        document.getElementById('adminFirebaseJson').value = JSON.stringify(firebaseConfig, null, 2);
+      }
     }
 
-    // Auth Processing
+    function saveAdminFirebaseConfig() {
+      try {
+        const parsed = JSON.parse(document.getElementById('adminFirebaseJson').value);
+        localStorage.setItem('takechat_custom_firebase', JSON.stringify(parsed));
+        alert('Firebase設定を保存しました。反映のため再読み込みします。');
+        location.reload();
+      } catch(e) {
+        alert('JSONフォーマットが不正です。');
+      }
+    }
+
+    // Auth Handling
     function handleAuth(e) {
       e.preventDefault();
       
@@ -493,12 +393,6 @@
 
       currentUser = { realName, displayName, password };
 
-      // Request Notification Permission on Auth
-      if ("Notification" in window && Notification.permission === "default") {
-        Notification.requestPermission();
-      }
-
-      // UI Transition
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('chatView').classList.remove('hidden');
       document.getElementById('btnLogout').classList.remove('hidden');
@@ -508,16 +402,21 @@
       if (!allUsers.some(u => u.displayName === displayName)) {
         allUsers.push(currentUser);
       }
+      renderUserList();
+      renderMessages();
+
+      // Request Web Notifications
+      if ("Notification" in window && Notification.permission !== "granted") {
+        Notification.requestPermission();
+      }
 
       if(isFirebaseReady && db) {
         db.collection('users').doc(displayName).set({
           realName, displayName, password, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.warn("Firestore User Sync Warning:", err));
+        }).catch(err => console.warn("Firestore user set error:", err));
       }
 
       initChatListeners();
-      renderUserList();
-      renderMessages();
     }
 
     function logout() {
@@ -530,13 +429,32 @@
 
     function switchChannel(type, title) {
       currentChannel = type;
-      document.getElementById('currentChatTitle').innerHTML = type === 'group' 
-        ? `<i class="fa-solid fa-users text-sky-600"></i> ${title}` 
+      document.getElementById('currentChatTitle').innerHTML = type === 'general' 
+        ? `<i class="fa-solid fa-users text-sky-600"></i> 一般` 
         : `<i class="fa-solid fa-user text-sky-600"></i> ${title}`;
       renderMessages();
     }
 
-    // Image Handlers
+    function requestDirectChat(targetDisplayName) {
+      if (!isFirebaseReady || !db) return;
+      
+      db.collection('requests').add({
+        from: currentUser.displayName,
+        to: targetDisplayName,
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).then(() => {
+        alert(`${targetDisplayName} さんに個別チャットのリクエストを送信しました。`);
+      });
+    }
+
+    function respondRequest(reqId, accept) {
+      if (!isFirebaseReady || !db) return;
+      db.collection('requests').doc(reqId).update({
+        status: accept ? 'accepted' : 'rejected'
+      });
+    }
+
     function handleFileSelect(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -578,7 +496,6 @@
       document.getElementById('imagePreviewContainer').classList.add('hidden');
     }
 
-    // Send Message
     function sendMessage(e) {
       e.preventDefault();
       const input = document.getElementById('messageInput');
@@ -600,7 +517,6 @@
 
       if(isFirebaseReady && db) {
         db.collection('messages').add(msgData).catch(err => {
-          console.warn("Firestore send fallback:", err);
           allMessages.push({...msgData, id: Date.now().toString()});
           renderMessages();
         });
@@ -610,40 +526,37 @@
       }
     }
 
-    // Firebase Listeners
     function initChatListeners() {
       if(!isFirebaseReady || !db) return;
 
-      try {
-        db.collection('users').onSnapshot(snapshot => {
-          allUsers = snapshot.docs.map(doc => doc.data());
-          renderUserList();
-        });
+      // Users listener
+      db.collection('users').onSnapshot(snapshot => {
+        allUsers = snapshot.docs.map(doc => doc.data());
+        renderUserList();
+      });
 
-        db.collection('chatRequests').onSnapshot(snapshot => {
-          chatRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          renderUserList();
-        });
+      // Direct Requests listener
+      db.collection('requests').onSnapshot(snapshot => {
+        directRequests = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        renderUserList();
+      });
 
-        db.collection('messages').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
-          const newMsgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          if(newMsgs.length > allMessages.length && allMessages.length > 0) {
-            const latest = newMsgs[newMsgs.length - 1];
-            // DO NOT notify if the message is sent by current user
-            if(currentUser && latest.sender !== currentUser.displayName) {
-              triggerNotification(latest);
-            }
+      // Messages listener
+      db.collection('messages').orderBy('createdAt', 'asc').onSnapshot(snapshot => {
+        const newMsgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        if(newMsgs.length > allMessages.length && allMessages.length > 0) {
+          const latest = newMsgs[newMsgs.length - 1];
+          // STRICT RULE: Do not notify for self-sent messages
+          if(latest.sender !== currentUser.displayName) {
+            playNotification(latest);
           }
-          allMessages = newMsgs;
-          renderMessages();
-        });
-      } catch(e) {
-        console.warn("Realtime listener fail:", e);
-      }
+        }
+        allMessages = newMsgs;
+        renderMessages();
+      });
     }
 
-    // Trigger Notification
-    function triggerNotification(msg) {
+    function playNotification(msg) {
       if (soundEnabled) {
         try { notifyAudio.play(); } catch(e){}
       }
@@ -654,104 +567,74 @@
       }
     }
 
-    // Render User List & Approved DMs
     function renderUserList() {
       const container = document.getElementById('userList');
-      const pendingContainer = document.getElementById('pendingRequestsContainer');
-      const pendingList = document.getElementById('pendingRequestsList');
+      const reqContainer = document.getElementById('requestList');
+      const reqWrapper = document.getElementById('chatRequestsContainer');
+      
       container.innerHTML = '';
-      pendingList.innerHTML = '';
+      reqContainer.innerHTML = '';
 
-      if (!currentUser) return;
-
-      // Find approved DMs
-      const approvedTargets = chatRequests.filter(r => 
-        (r.from === currentUser.displayName || r.to === currentUser.displayName) && r.status === 'approved'
-      ).map(r => r.from === currentUser.displayName ? r.to : r.from);
-
-      approvedTargets.forEach(targetName => {
-        const btn = document.createElement('button');
-        btn.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200";
-        btn.onclick = () => switchChannel(targetName, targetName);
-        btn.innerHTML = `<span class="truncate"><i class="fa-regular fa-user mr-2 text-sky-500"></i>${targetName}</span>`;
-        container.appendChild(btn);
-      });
-
-      if (approvedTargets.length === 0) {
-        container.innerHTML = `<div class="text-[11px] text-slate-400 px-3 py-1">個別チャットはありません</div>`;
-      }
-
-      // Pending requests sent to current user
-      const incomingPending = chatRequests.filter(r => r.to === currentUser.displayName && r.status === 'pending');
-      if (incomingPending.length > 0) {
-        pendingContainer.classList.remove('hidden');
-        incomingPending.forEach(req => {
+      // Render incoming direct chat requests
+      const incoming = directRequests.filter(r => r.to === currentUser.displayName && r.status === 'pending');
+      if (incoming.length > 0) {
+        reqWrapper.classList.remove('hidden');
+        incoming.forEach(r => {
           const div = document.createElement('div');
-          div.className = "flex items-center justify-between bg-amber-50 dark:bg-amber-950/40 p-2 rounded text-xs";
+          div.className = "flex items-center justify-between p-2 bg-amber-50 dark:bg-amber-950/40 rounded-lg text-xs";
           div.innerHTML = `
-            <span class="font-semibold text-amber-900 dark:text-amber-200">${req.from}</span>
-            <button onclick="approveRequest('${req.id}')" class="px-2 py-1 bg-sky-600 text-white rounded text-[10px] hover:bg-sky-700">承認</button>
+            <span class="font-bold">${r.from}</span>
+            <div class="space-x-1">
+              <button onclick="respondRequest('${r.id}', true)" class="px-2 py-1 bg-green-600 text-white rounded text-[10px]">許可</button>
+              <button onclick="respondRequest('${r.id}', false)" class="px-2 py-1 bg-red-600 text-white rounded text-[10px]">拒否</button>
+            </div>
           `;
-          pendingList.appendChild(div);
+          reqContainer.appendChild(div);
         });
       } else {
-        pendingContainer.classList.add('hidden');
-      }
-    }
-
-    // Request Chat Functions
-    function renderAvailableUsersForRequest() {
-      const container = document.getElementById('availableUsersForRequest');
-      container.innerHTML = '';
-
-      const connectedOrRequested = chatRequests.filter(r => r.from === currentUser.displayName || r.to === currentUser.displayName);
-      const connectedUserNames = connectedOrRequested.map(r => r.from === currentUser.displayName ? r.to : r.from);
-
-      const candidates = allUsers.filter(u => u.displayName !== currentUser.displayName && !connectedUserNames.includes(u.displayName));
-
-      if (candidates.length === 0) {
-        container.innerHTML = `<p class="text-xs text-slate-400">申請可能な新規ユーザーはいません。</p>`;
-        return;
+        reqWrapper.classList.add('hidden');
       }
 
-      candidates.forEach(u => {
+      // Render User List & Direct Chat Options
+      allUsers.filter(u => u.displayName !== currentUser.displayName).forEach(u => {
+        const isConnected = directRequests.some(r => 
+          ((r.from === currentUser.displayName && r.to === u.displayName) || (r.from === u.displayName && r.to === currentUser.displayName)) && r.status === 'accepted'
+        );
+
+        const hasPending = directRequests.some(r => 
+          r.from === currentUser.displayName && r.to === u.displayName && r.status === 'pending'
+        );
+
         const div = document.createElement('div');
-        div.className = "flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-700 rounded border border-slate-200 dark:border-slate-600";
-        div.innerHTML = `
-          <span class="text-xs font-bold dark:text-white">${u.displayName} (${u.realName})</span>
-          <button onclick="sendChatRequest('${u.displayName}')" class="px-3 py-1 bg-sky-600 text-white text-xs rounded hover:bg-sky-700">申請送信</button>
-        `;
+        div.className = "w-full text-left px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200";
+
+        if (isConnected) {
+          div.innerHTML = `
+            <button onclick="switchChannel('${u.displayName}', '${u.displayName}')" class="truncate flex-1 text-left">
+              <i class="fa-regular fa-user mr-2 text-green-500"></i>${u.displayName}
+            </button>
+          `;
+        } else if (hasPending) {
+          div.innerHTML = `
+            <span class="truncate text-slate-400"><i class="fa-regular fa-user mr-2"></i>${u.displayName}</span>
+            <span class="text-[10px] text-amber-500">申請中</span>
+          `;
+        } else {
+          div.innerHTML = `
+            <span class="truncate text-slate-400"><i class="fa-regular fa-user mr-2"></i>${u.displayName}</span>
+            <button onclick="requestDirectChat('${u.displayName}')" class="text-[10px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded hover:bg-sky-200">チャット申請</button>
+          `;
+        }
         container.appendChild(div);
       });
     }
 
-    function sendChatRequest(targetDisplayName) {
-      if (!isFirebaseReady || !db) return;
-      db.collection('chatRequests').add({
-        from: currentUser.displayName,
-        to: targetDisplayName,
-        status: 'pending',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).then(() => {
-        alert(`${targetDisplayName} さんにチャット申請を送信しました。`);
-        toggleModal('requestChatModal', false);
-      });
-    }
-
-    function approveRequest(reqId) {
-      if (!isFirebaseReady || !db) return;
-      db.collection('chatRequests').doc(reqId).update({
-        status: 'approved'
-      });
-    }
-
-    // Render Messages
     function renderMessages() {
       const container = document.getElementById('messageList');
       container.innerHTML = '';
 
       const filtered = allMessages.filter(m => {
-        if(currentChannel === 'group') return m.target === 'group';
+        if(currentChannel === 'general') return m.target === 'general' || m.target === 'group';
         return (m.sender === currentUser.displayName && m.target === currentChannel) ||
                (m.sender === currentChannel && m.target === currentUser.displayName);
       });
@@ -797,20 +680,6 @@
       container.scrollTop = container.scrollHeight;
     }
 
-    // Admin Data & Tabs
-    function switchAdminTab(tab) {
-      document.getElementById('adminTabData').classList.toggle('hidden', tab !== 'data');
-      document.getElementById('adminTabHistory').classList.toggle('hidden', tab !== 'history');
-
-      document.getElementById('tabBtnData').className = tab === 'data' 
-        ? "px-3 py-1.5 text-xs font-bold border-b-2 border-red-500 text-red-600" 
-        : "px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700";
-
-      document.getElementById('tabBtnHistory').className = tab === 'history' 
-        ? "px-3 py-1.5 text-xs font-bold border-b-2 border-red-500 text-red-600" 
-        : "px-3 py-1.5 text-xs font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-700";
-    }
-
     function renderAdminData() {
       const userBox = document.getElementById('adminUserList');
       const msgBox = document.getElementById('adminMsgList');
@@ -820,15 +689,8 @@
       ).join('') || 'ユーザーデータがありません';
 
       msgBox.innerHTML = allMessages.map(m => 
-        `<div>[宛先: ${m.target}] <b>${m.sender}</b> (${m.senderRealName || ''}): ${m.text || ''} ${m.image ? '(📷画像)' : ''}</div>`
+        `<div>[${m.target}] <b>${m.sender}</b>: ${m.text} ${m.image ? '(画像添付)' : ''}</div>`
       ).join('') || 'メッセージデータがありません';
-    }
-
-    function copyInviteUrl() {
-      const input = document.getElementById('inviteUrlInput');
-      input.select();
-      document.execCommand('copy');
-      alert('招待URLをコピーしました！');
     }
   </script>
 </body>
