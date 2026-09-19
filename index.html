@@ -1,16 +1,18 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="ja" class="h-full">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>takechat</title>
 
+  <!-- PWA Settings -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="takechat">
+  <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/134/134937.png">
 
-  <!-- Tailwind CSS (Dark Mode Enabled) -->
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -21,7 +23,7 @@
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <!-- Firebase SDK (v9/v10 Compat) -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
@@ -35,103 +37,130 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-200" id="bodyEl">
+<body class="bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-100 h-full flex flex-col font-sans transition-colors duration-200" id="bodyEl">
+
+  <!-- PWA Install Promotion Banner -->
+  <div id="pwaBanner" class="bg-gradient-to-r from-sky-600 to-indigo-600 text-white text-xs py-2 px-4 flex items-center justify-between shadow-md z-40">
+    <div class="flex items-center gap-2 truncate">
+      <i class="fa-solid fa-mobile-screen-button text-yellow-300 animate-bounce"></i>
+      <span class="font-bold">アプリのように使おう！</span>
+      <span class="hidden sm:inline text-sky-100">ホーム画面に追加するとバックグラウンド通知が届きます</span>
+    </div>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <button onclick="toggleModal('pwaModal', true)" class="bg-white text-sky-700 font-bold px-3 py-1 rounded-full text-xs shadow hover:bg-sky-50 transition-colors">
+        追加手順を見る
+      </button>
+      <button onclick="dismissBanner()" class="text-white/80 hover:text-white px-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- Header -->
-  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-3 sticky top-0 z-30 flex items-center justify-between shadow-sm">
-    <div class="flex items-center space-x-3">
-      <h1 class="text-xl font-bold text-sky-600 dark:text-sky-400 flex items-center gap-2">
+  <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-4 py-2.5 sticky top-0 z-30 flex items-center justify-between shadow-sm flex-shrink-0">
+    <div class="flex items-center space-x-3 truncate">
+      <h1 class="text-xl font-bold text-sky-600 dark:text-sky-400 flex items-center gap-2 flex-shrink-0">
         <i class="fa-solid fa-comments"></i> takechat
       </h1>
-      <span id="userBadge" class="hidden text-xs px-2 py-1 bg-slate-200 dark:bg-slate-700 rounded-full text-slate-600 dark:text-slate-300"></span>
+      <span id="userBadge" class="hidden text-xs px-2.5 py-1 bg-sky-50 dark:bg-slate-700 border border-sky-200 dark:border-slate-600 rounded-full text-sky-700 dark:text-sky-300 truncate max-w-[150px] sm:max-w-none"></span>
     </div>
 
-    <div class="flex items-center space-x-2">
-      <!-- Notification Sound Switch -->
+    <div class="flex items-center space-x-1 sm:space-x-2 flex-shrink-0">
+      <!-- Sound Switch -->
       <button id="btnSoundToggle" onclick="toggleSoundPreference()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg" title="通知音切替">
-        <i id="soundIcon" class="fa-solid fa-bell text-lg"></i>
+        <i id="soundIcon" class="fa-solid fa-bell text-base sm:text-lg"></i>
       </button>
 
-      <!-- PWA Guide Button (iOS) -->
-      <button id="btnPwaGuide" onclick="toggleModal('pwaModal', true)" class="text-xs bg-slate-100 dark:bg-slate-700 dark:text-white hover:bg-slate-200 px-3 py-1.5 rounded-lg flex items-center gap-1">
-        <i class="fa-solid fa-arrow-down-to-bracket text-sky-600 dark:text-sky-400"></i>
-        <span class="hidden sm:inline">ホーム追加</span>
+      <!-- PWA Guide Button -->
+      <button onclick="toggleModal('pwaModal', true)" class="text-xs bg-sky-50 text-sky-600 border border-sky-200 dark:bg-slate-700 dark:border-slate-600 dark:text-sky-300 hover:bg-sky-100 px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-semibold">
+        <i class="fa-solid fa-square-plus text-sky-500"></i>
+        <span>ホーム追加</span>
       </button>
 
       <!-- Theme Switcher -->
       <button id="btnTheme" onclick="toggleTheme()" class="p-2 text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 rounded-lg" title="ダークモード切替">
-        <i id="themeIcon" class="fa-solid fa-moon text-lg"></i>
+        <i id="themeIcon" class="fa-solid fa-moon text-base sm:text-lg"></i>
       </button>
 
       <!-- Admin Panel Button -->
       <button id="btnAdmin" onclick="openAdminModal()" class="p-2 text-slate-400 hover:text-red-500 rounded-lg" title="管理者ページ">
-        <i class="fa-solid fa-user-shield text-lg"></i>
+        <i class="fa-solid fa-user-shield text-base sm:text-lg"></i>
       </button>
 
       <!-- Logout -->
-      <button id="btnLogout" onclick="logout()" class="hidden text-xs bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100">
+      <button id="btnLogout" onclick="logout()" class="hidden text-xs bg-red-50 text-red-600 border border-red-200 dark:bg-red-950/50 dark:border-red-800 dark:text-red-300 px-2.5 py-1.5 rounded-lg hover:bg-red-100">
         ログアウト
       </button>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="flex-1 flex flex-col max-w-5xl w-full mx-auto p-2 sm:p-4 overflow-hidden relative">
+  <main class="flex-1 flex flex-col max-w-6xl w-full mx-auto p-2 sm:p-4 overflow-hidden relative">
 
     <!-- AUTH VIEW -->
     <div id="authView" class="w-full max-w-md mx-auto my-auto bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700">
-      <h2 class="text-2xl font-bold text-center mb-4 text-slate-800 dark:text-white">takechatへようこそ</h2>
+      <div class="text-center mb-4">
+        <h2 class="text-2xl font-bold text-slate-800 dark:text-white flex items-center justify-center gap-2">
+          <i class="fa-solid fa-comments text-sky-600"></i> takechat
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">リアルタイム・チャットプラットフォーム</p>
+      </div>
       
       <!-- Auth Mode Tabs -->
       <div class="flex border-b border-slate-200 dark:border-slate-700 mb-5 text-sm font-bold">
-        <button id="tabAuthLogin" onclick="switchAuthTab('login')" class="flex-1 pb-2 border-b-2 border-sky-600 text-sky-600 dark:text-sky-400 dark:border-sky-400">ログイン</button>
-        <button id="tabAuthRegister" onclick="switchAuthTab('register')" class="flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600">新規登録</button>
+        <button id="tabAuthLogin" onclick="switchAuthTab('login')" class="flex-1 pb-2 border-b-2 border-sky-600 text-sky-600 dark:text-sky-400 dark:border-sky-400 transition-colors">ログイン</button>
+        <button id="tabAuthRegister" onclick="switchAuthTab('register')" class="flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors">新規登録</button>
       </div>
 
       <form id="authForm" onsubmit="handleAuth(event)" class="space-y-4">
         <div id="fieldRealName" class="hidden">
-          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">本名（例：山田 太郎）</label>
-          <input type="text" id="inputRealName" class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none">
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">本名（例：山田 太郎）</label>
+          <input type="text" id="inputRealName" placeholder="氏名を入力" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">表示名（ニックネーム）</label>
-          <input type="text" id="inputDisplayName" required class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none">
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">表示名（ニックネーム）</label>
+          <input type="text" id="inputDisplayName" required placeholder="チャットで表示される名前" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none">
         </div>
 
         <div>
-          <label class="block text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 mb-1">パスワード</label>
-          <input type="password" id="inputPassword" required class="w-full px-4 py-2 rounded-lg border dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none">
-          <p class="text-xs text-red-500 mt-1 font-semibold">⚠️ パスワードに機密情報（他サービスで使うパスワード等）を入力しないでください</p>
+          <label class="block text-xs font-semibold text-slate-600 dark:text-slate-300 mb-1">パスワード</label>
+          <input type="password" id="inputPassword" required placeholder="パスワードを入力" class="w-full px-3.5 py-2 text-sm rounded-lg border border-slate-300 dark:bg-slate-700 dark:border-slate-600 dark:text-white focus:ring-2 focus:ring-sky-500 outline-none">
+          <p class="text-[11px] text-amber-600 dark:text-amber-400 mt-1 font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-triangle-exclamation"></i> 他サービスと同じパスワードを入力しないでください
+          </p>
         </div>
 
         <!-- Consent Terms -->
-        <div class="p-3 bg-slate-50 dark:bg-slate-900/50 rounded-lg text-xs text-slate-600 dark:text-slate-400 space-y-2 border border-slate-200 dark:border-slate-700">
-          <div class="font-bold text-slate-700 dark:text-slate-300">【利用同意・注意事項】</div>
-          <p>開発者・管理者が不具合調査および運用管理のため、メッセージ内容および登録情報を確認する場合があります。個人情報や秘密情報の送信はお控えください。</p>
+        <div class="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-lg text-xs text-slate-600 dark:text-slate-400 space-y-2 border border-slate-200 dark:border-slate-700">
+          <div class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1">
+            <i class="fa-solid fa-shield-halved text-sky-600"></i> 利用規約・注意事項
+          </div>
+          <p class="leading-relaxed text-[11px]">開発者・管理者がシステム保守・不具合調査のため、メッセージ内容および登録情報を確認する場合があります。機密情報の送信はお控えください。</p>
           <label class="flex items-start gap-2 pt-1 cursor-pointer font-semibold text-slate-800 dark:text-slate-200">
             <input type="checkbox" id="checkConsent" required class="mt-0.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500">
-            <span>上記規約および注意事項に同意します</span>
+            <span>上記利用規約・注意事項に同意する</span>
           </label>
         </div>
 
-        <button type="submit" id="btnAuthSubmit" class="w-full py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-lg transition-colors shadow-md">
+        <button type="submit" id="btnAuthSubmit" class="w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm rounded-lg transition-colors shadow">
           ログイン
         </button>
       </form>
     </div>
 
-    <!-- CHAT VIEW -->
-    <div id="chatView" class="hidden flex-1 flex flex-col md:flex-row bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden h-[calc(100vh-5rem)]">
+    <!-- CHAT VIEW (Layout Fixed) -->
+    <div id="chatView" class="hidden flex-1 flex flex-col md:flex-row bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-200 dark:border-slate-700 overflow-hidden h-full max-h-[calc(100vh-7rem)]">
       
       <!-- Sidebar -->
-      <aside class="w-full md:w-72 bg-slate-50 dark:bg-slate-800/50 border-r border-slate-200 dark:border-slate-700 flex flex-col h-1/3 md:h-full">
-        <div class="p-3 border-b border-slate-200 dark:border-slate-700 font-bold text-xs uppercase text-slate-400 flex justify-between items-center">
-          <span>チャンネル & 個別チャット</span>
+      <aside class="w-full md:w-64 bg-slate-50 dark:bg-slate-800/80 border-b md:border-b-0 md:border-r border-slate-200 dark:border-slate-700 flex flex-col h-1/3 md:h-full flex-shrink-0">
+        <div class="p-3 border-b border-slate-200 dark:border-slate-700 font-bold text-xs uppercase text-slate-400 flex justify-between items-center bg-slate-100/50 dark:bg-slate-800">
+          <span>チャンネル & 個別</span>
         </div>
+
         <div class="flex-1 overflow-y-auto p-2 space-y-2">
-          <button onclick="switchChannel('general', '一般')" id="chan-general" class="w-full text-left px-3 py-2 rounded-lg font-medium flex items-center justify-between bg-sky-50 dark:bg-slate-700 text-sky-600 dark:text-sky-400">
-            <span><i class="fa-solid fa-users mr-2"></i>一般</span>
+          <button onclick="switchChannel('general', '一般')" id="chan-general" class="w-full text-left px-3 py-2 rounded-lg font-medium text-xs flex items-center justify-between bg-sky-100 dark:bg-slate-700 text-sky-700 dark:text-sky-300 transition-colors">
+            <span><i class="fa-solid fa-users mr-2 text-sky-600"></i>一般チャンネル</span>
           </button>
           
           <div class="pt-2 text-[10px] font-bold uppercase text-slate-400 px-3 border-t dark:border-slate-700">
@@ -140,43 +169,50 @@
 
           <!-- Direct Chat Requests -->
           <div id="chatRequestsContainer" class="hidden space-y-1">
-            <div class="text-[10px] font-bold text-amber-500 px-3">届いているリクエスト</div>
+            <div class="text-[10px] font-bold text-amber-600 px-3 flex items-center gap-1">
+              <i class="fa-solid fa-clock text-amber-500"></i> 届いている申請
+            </div>
             <div id="requestList" class="space-y-1"></div>
           </div>
 
-          <!-- Users List Layout Fixed -->
+          <!-- Users List -->
           <div id="userList" class="space-y-1"></div>
         </div>
       </aside>
 
       <!-- Main Chat Area -->
-      <section class="flex-1 flex flex-col h-2/3 md:h-full bg-white dark:bg-slate-800">
-        <div class="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800">
-          <h3 id="currentChatTitle" class="font-bold text-slate-800 dark:text-white flex items-center gap-2">
-            一般
+      <section class="flex-1 flex flex-col h-2/3 md:h-full bg-white dark:bg-slate-800 min-w-0">
+        <div class="px-4 py-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50 flex-shrink-0">
+          <h3 id="currentChatTitle" class="font-bold text-sm text-slate-800 dark:text-white flex items-center gap-2 truncate">
+            <i class="fa-solid fa-users text-sky-600"></i> 一般チャンネル
           </h3>
-          <span id="statusIndicator" class="text-xs text-green-500 font-semibold">● オンライン</span>
+          <span id="statusIndicator" class="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800 flex-shrink-0">
+            ● オンライン
+          </span>
         </div>
 
-        <div id="messageList" class="flex-1 overflow-y-auto p-4 space-y-4 chat-scroll"></div>
+        <!-- Messages Scroll Box -->
+        <div id="messageList" class="flex-1 overflow-y-auto p-4 space-y-3 chat-scroll min-h-0"></div>
 
-        <div id="imagePreviewContainer" class="hidden px-4 py-2 bg-slate-100 dark:bg-slate-700 flex items-center justify-between">
+        <!-- Image Preview -->
+        <div id="imagePreviewContainer" class="hidden px-4 py-2 bg-slate-100 dark:bg-slate-700 border-t border-slate-200 dark:border-slate-600 flex items-center justify-between flex-shrink-0">
           <div class="flex items-center space-x-2">
-            <img id="imgPreview" class="h-12 w-12 object-cover rounded border">
-            <span class="text-xs text-slate-500 dark:text-slate-300">画像を送信準備中...</span>
+            <img id="imgPreview" class="h-10 w-10 object-cover rounded border">
+            <span class="text-xs text-slate-600 dark:text-slate-300">画像を送信準備中...</span>
           </div>
-          <button onclick="cancelImage()" class="text-red-500 hover:text-red-700 text-xs">キャンセル</button>
+          <button onclick="cancelImage()" class="text-red-500 hover:text-red-700 text-xs font-bold">キャンセル</button>
         </div>
 
-        <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+        <!-- Input Form -->
+        <div class="p-3 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 flex-shrink-0">
           <form onsubmit="sendMessage(event)" class="flex items-center space-x-2">
-            <label class="p-2 text-slate-400 hover:text-sky-600 cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700">
-              <i class="fa-solid fa-image text-xl"></i>
+            <label class="p-2 text-slate-400 hover:text-sky-600 cursor-pointer rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+              <i class="fa-solid fa-image text-lg"></i>
               <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)" class="hidden">
             </label>
-            <input type="text" id="messageInput" placeholder="メッセージを入力..." class="flex-1 px-4 py-2 bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-sky-500">
-            <button type="submit" class="p-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full transition-colors shadow">
-              <i class="fa-solid fa-paper-plane"></i>
+            <input type="text" id="messageInput" placeholder="メッセージを入力..." class="flex-1 px-4 py-2 text-sm bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-sky-500">
+            <button type="submit" class="p-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-full transition-colors shadow flex-shrink-0">
+              <i class="fa-solid fa-paper-plane text-xs"></i>
             </button>
           </form>
         </div>
@@ -186,35 +222,78 @@
 
   </main>
 
-  <!-- PWA Modal (iOS Focus) -->
-  <div id="pwaModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-white dark:bg-slate-800 max-w-sm w-full p-6 rounded-2xl shadow-2xl relative">
-      <button onclick="toggleModal('pwaModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+  <!-- PWA Promotion / Installation Guide Modal -->
+  <div id="pwaModal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-slate-800 max-w-md w-full p-6 rounded-2xl shadow-2xl relative border border-slate-200 dark:border-slate-700">
+      <button onclick="toggleModal('pwaModal', false)" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
         <i class="fa-solid fa-xmark text-xl"></i>
       </button>
-      <h3 class="text-lg font-bold mb-3 flex items-center gap-2 text-sky-600 dark:text-sky-400">
-        <i class="fa-solid fa-mobile-screen"></i> ホーム画面に追加（iOS手順）
-      </h3>
-      <p class="text-xs text-slate-600 dark:text-slate-300 mb-4">
-        Safariで開いている場合、アプリとして追加することでバックグラウンド通知を受け取りやすくなります。
-      </p>
-      <ol class="text-xs space-y-3 text-slate-700 dark:text-slate-200 border-l-2 border-sky-500 pl-3">
-        <li>1. Safari画面下の <b>「共有アイコン（四角から矢印）」</b> をタップ</li>
-        <li>2. メニューから <b>「ホーム画面に追加」</b> を選択</li>
-        <li>3. 右上の <b>「追加」</b> をタップして完了</li>
-      </ol>
-      <button onclick="toggleModal('pwaModal', false)" class="mt-6 w-full py-2 bg-sky-600 text-white text-xs font-bold rounded-lg">
-        閉じる
+
+      <div class="text-center mb-4">
+        <div class="w-12 h-12 bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 rounded-2xl flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 dark:text-white">
+          ホーム画面に追加して快適に使おう！
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          アプリ化すると全画面表示 & バックグラウンド通知がスムーズになります。
+        </p>
+      </div>
+
+      <!-- Device Specific Steps -->
+      <div class="space-y-4">
+        <!-- iOS Guide -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
+          <div class="font-bold text-xs text-sky-600 dark:text-sky-400 flex items-center gap-1.5 mb-2">
+            <i class="fa-brands fa-apple"></i> iPhone / iPad (Safari) の場合
+          </div>
+          <ol class="text-xs space-y-2 text-slate-700 dark:text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="bg-sky-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">1</span>
+              <span>画面下の <b>「共有アイコン <i class="fa-solid fa-share-from-square text-sky-500"></i>」</b> をタップ</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="bg-sky-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">2</span>
+              <span>メニューから <b>「ホーム画面に追加 <i class="fa-regular fa-square-plus text-sky-500"></i>」</b> を選択</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="bg-sky-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">3</span>
+              <span>右上の <b>「追加」</b> をタップして完了</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Android Guide -->
+        <div class="p-3.5 bg-slate-50 dark:bg-slate-700/50 rounded-xl border border-slate-200 dark:border-slate-600">
+          <div class="font-bold text-xs text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5 mb-2">
+            <i class="fa-brands fa-android"></i> Android (Chrome) の場合
+          </div>
+          <ol class="text-xs space-y-2 text-slate-700 dark:text-slate-300">
+            <li class="flex items-start gap-2">
+              <span class="bg-emerald-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">1</span>
+              <span>画面右上の <b>「メニュー（3点リーダー） <i class="fa-solid fa-ellipsis-vertical text-emerald-500"></i>」</b> をタップ</span>
+            </li>
+            <li class="flex items-start gap-2">
+              <span class="bg-emerald-600 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] flex-shrink-0 mt-0.5">2</span>
+              <span><b>「アプリをインストール」</b> または <b>「ホーム画面に追加」</b> を選択</span>
+            </li>
+          </ol>
+        </div>
+      </div>
+
+      <button onclick="toggleModal('pwaModal', false)" class="mt-5 w-full py-2.5 bg-sky-600 hover:bg-sky-700 text-white text-xs font-bold rounded-xl transition-colors shadow">
+        理解しました
       </button>
     </div>
   </div>
 
-  <!-- Lightbox Modal -->
+  <!-- Image Lightbox Modal -->
   <div id="imageModal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4" onclick="toggleModal('imageModal', false)">
     <img id="lightboxImg" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl">
   </div>
 
-  <!-- Admin Password Auth Modal -->
+  <!-- Admin Pass Modal -->
   <div id="adminAuthModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white dark:bg-slate-800 max-w-xs w-full p-5 rounded-2xl shadow-2xl relative">
       <button onclick="toggleModal('adminAuthModal', false)" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
@@ -240,7 +319,6 @@
         <i class="fa-solid fa-user-shield"></i> 開発者管理者ページ
       </h3>
 
-      <!-- Admin Tabs -->
       <div class="flex border-b border-slate-200 dark:border-slate-700 mb-4 text-xs font-bold space-x-4">
         <button onclick="switchAdminTab('data')" id="tabBtnData" class="pb-2 border-b-2 border-red-500 text-red-600">データ・ログ確認</button>
         <button onclick="switchAdminTab('firebase')" id="tabBtnFirebase" class="pb-2 border-b-2 border-transparent text-slate-400">Firebase設定</button>
@@ -248,7 +326,6 @@
       </div>
       
       <div class="flex-1 overflow-y-auto space-y-4 text-xs dark:text-slate-200">
-        <!-- Tab: Data -->
         <div id="adminTabContentData" class="space-y-4">
           <div class="border dark:border-slate-700 rounded-lg p-3">
             <h4 class="font-bold mb-2 border-b dark:border-slate-700 pb-1">登録ユーザー＆パスワード一覧</h4>
@@ -260,17 +337,15 @@
           </div>
         </div>
 
-        <!-- Tab: Firebase Config -->
         <div id="adminTabContentFirebase" class="hidden space-y-3">
-          <p class="text-xs text-slate-500">Firebase設定（全体共通）。一度管理者が設定すると全ユーザーに適用されます。</p>
+          <p class="text-xs text-slate-500">Firebase設定（全体共通）。</p>
           <textarea id="adminFirebaseJson" rows="8" class="w-full font-mono text-xs p-2 border rounded-lg dark:bg-slate-900 dark:border-slate-700 text-slate-800 dark:text-slate-200" placeholder="Firebase config JSON"></textarea>
           <button onclick="saveAdminFirebaseConfig()" class="px-4 py-2 bg-sky-600 text-white rounded-lg font-bold">設定を保存</button>
         </div>
 
-        <!-- Tab: Version -->
         <div id="adminTabContentVersion" class="hidden space-y-2">
           <div class="p-2 border-b dark:border-slate-700">
-            <span class="font-bold">v2.8.0</span> - 個別チャットレイアウト修復、ログイン/新規登録分離、ダークモード機能修正、Renderバックグラウンド通知調整
+            <span class="font-bold">v2.9.0</span> - レイアウト崩れ修復、ホーム画面追加(PWA)モーダル/バナーの強力化
           </div>
         </div>
       </div>
@@ -278,7 +353,7 @@
   </div>
 
   <script>
-    // --- Service Worker / Render Background Notification System ---
+    // --- Service Worker Setup ---
     if ('serviceWorker' in navigator) {
       const swCode = `
         self.addEventListener('push', function(event) {
@@ -297,7 +372,7 @@
       navigator.serviceWorker.register(swUrl).catch(err => console.warn('SW registration fallback:', err));
     }
 
-    // --- Firebase Configuration ---
+    // --- Firebase Setup ---
     let firebaseConfig = {
       apiKey: "AIzaSyAYn8j8VlMy0FDoQ1ASaOzM6Rh1JK7aqb8",
       authDomain: "takechat-fbd46.firebaseapp.com",
@@ -335,21 +410,31 @@
     let directRequests = [];
     let soundEnabled = true;
     let isAdminAuthenticated = false;
-    let authMode = 'login'; // 'login' or 'register'
+    let authMode = 'login';
 
     const notifyAudio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
 
     window.addEventListener('DOMContentLoaded', () => {
-      // Dark Mode initial sync
+      // Dark Mode sync
       if (localStorage.getItem('takechat_theme') === 'dark') {
         document.documentElement.classList.add('dark');
         document.getElementById('themeIcon').className = 'fa-solid fa-sun text-yellow-400 text-lg';
       }
 
-      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-        setTimeout(() => toggleModal('pwaModal', true), 1000);
+      // Check Standalone (PWA) Mode & Show Modal Prompt if not added
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+      if (!isStandalone) {
+        setTimeout(() => {
+          toggleModal('pwaModal', true);
+        }, 1200);
+      } else {
+        document.getElementById('pwaBanner').classList.add('hidden');
       }
     });
+
+    function dismissBanner() {
+      document.getElementById('pwaBanner').classList.add('hidden');
+    }
 
     function toggleTheme() {
       const isDark = document.documentElement.classList.toggle('dark');
@@ -398,12 +483,12 @@
       document.getElementById('btnAuthSubmit').innerText = isRegister ? '新規登録して参加' : 'ログイン';
 
       document.getElementById('tabAuthLogin').className = !isRegister 
-        ? 'flex-1 pb-2 border-b-2 border-sky-600 text-sky-600 dark:text-sky-400 dark:border-sky-400' 
-        : 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600';
+        ? 'flex-1 pb-2 border-b-2 border-sky-600 text-sky-600 dark:text-sky-400 dark:border-sky-400 transition-colors' 
+        : 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors';
 
       document.getElementById('tabAuthRegister').className = isRegister 
-        ? 'flex-1 pb-2 border-b-2 border-sky-600 text-sky-600 dark:text-sky-400 dark:border-sky-400' 
-        : 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600';
+        ? 'flex-1 pb-2 border-b-2 border-sky-600 text-sky-600 dark:text-sky-400 dark:border-sky-400 transition-colors' 
+        : 'flex-1 pb-2 border-b-2 border-transparent text-slate-400 hover:text-slate-600 transition-colors';
     }
 
     function switchAdminTab(tab) {
@@ -422,7 +507,7 @@
       try {
         const parsed = JSON.parse(document.getElementById('adminFirebaseJson').value);
         localStorage.setItem('takechat_custom_firebase', JSON.stringify(parsed));
-        alert('Firebase設定を保存しました。反映のため再読み込みします。');
+        alert('Firebase設定を保存しました。再読み込みします。');
         location.reload();
       } catch(e) {
         alert('JSONフォーマットが不正です。');
@@ -439,7 +524,7 @@
       const consent = document.getElementById('checkConsent').checked;
 
       if(!displayName || !password || !consent) {
-        alert("必要項目を入力し、利用同意にチェックを入れてください。");
+        alert("必要項目を入力し、利用規約にチェックを入れてください。");
         return;
       }
 
@@ -453,7 +538,7 @@
       document.getElementById('authView').classList.add('hidden');
       document.getElementById('chatView').classList.remove('hidden');
       document.getElementById('btnLogout').classList.remove('hidden');
-      document.getElementById('userBadge').innerText = `${displayName} (${currentUser.realName})`;
+      document.getElementById('userBadge').innerText = `${displayName}`;
       document.getElementById('userBadge').classList.remove('hidden');
 
       if (!allUsers.some(u => u.displayName === displayName)) {
@@ -469,7 +554,7 @@
       if(isFirebaseReady && db) {
         db.collection('users').doc(displayName).set({
           realName: currentUser.realName, displayName, password, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }, { merge: true }).catch(err => console.warn("Firestore user set error:", err));
+        }, { merge: true }).catch(err => console.warn("Firestore error:", err));
       }
 
       initChatListeners();
@@ -486,7 +571,7 @@
     function switchChannel(type, title) {
       currentChannel = type;
       document.getElementById('currentChatTitle').innerHTML = type === 'general' 
-        ? `<i class="fa-solid fa-users text-sky-600"></i> 一般` 
+        ? `<i class="fa-solid fa-users text-sky-600"></i> 一般チャンネル` 
         : `<i class="fa-solid fa-user text-sky-600"></i> ${title}`;
       renderMessages();
     }
@@ -500,7 +585,7 @@
         status: 'pending',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       }).then(() => {
-        alert(`${targetDisplayName} さんに個別チャットのリクエストを送信しました。`);
+        alert(`${targetDisplayName} さんに個別チャットの申請を送信しました。`);
       });
     }
 
@@ -613,7 +698,6 @@
         try { notifyAudio.play(); } catch(e){}
       }
 
-      // Background / Foreground Browser Notification
       if ("Notification" in window && Notification.permission === "granted") {
         if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
           navigator.serviceWorker.ready.then(registration => {
@@ -645,10 +729,10 @@
           const div = document.createElement('div');
           div.className = "flex items-center justify-between p-2 bg-amber-50 dark:bg-amber-950/40 rounded-lg text-xs border border-amber-200 dark:border-amber-800";
           div.innerHTML = `
-            <span class="font-bold truncate max-w-[100px] dark:text-amber-200">${r.from}</span>
+            <span class="font-bold truncate max-w-[90px] dark:text-amber-200">${r.from}</span>
             <div class="space-x-1 flex-shrink-0">
-              <button onclick="respondRequest('${r.id}', true)" class="px-2 py-1 bg-green-600 text-white rounded text-[10px] hover:bg-green-700">許可</button>
-              <button onclick="respondRequest('${r.id}', false)" class="px-2 py-1 bg-red-600 text-white rounded text-[10px] hover:bg-red-700">拒否</button>
+              <button onclick="respondRequest('${r.id}', true)" class="px-2 py-0.5 bg-emerald-600 text-white rounded text-[10px] hover:bg-emerald-700">許可</button>
+              <button onclick="respondRequest('${r.id}', false)" class="px-2 py-0.5 bg-red-600 text-white rounded text-[10px] hover:bg-red-700">拒否</button>
             </div>
           `;
           reqContainer.appendChild(div);
@@ -657,7 +741,6 @@
         reqWrapper.classList.add('hidden');
       }
 
-      // Individual Chat Items Layout Fix
       allUsers.filter(u => u.displayName !== currentUser.displayName).forEach(u => {
         const isConnected = directRequests.some(r => 
           ((r.from === currentUser.displayName && r.to === u.displayName) || (r.from === u.displayName && r.to === currentUser.displayName)) && r.status === 'accepted'
@@ -668,30 +751,30 @@
         );
 
         const div = document.createElement('div');
-        div.className = "w-full px-3 py-2 rounded-lg text-xs font-medium flex items-center justify-between hover:bg-slate-100 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors";
+        div.className = "w-full px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center justify-between hover:bg-slate-200/60 dark:hover:bg-slate-700 dark:text-slate-200 transition-colors";
 
         if (isConnected) {
           div.innerHTML = `
             <button onclick="switchChannel('${u.displayName}', '${u.displayName}')" class="truncate w-full text-left flex items-center">
-              <i class="fa-regular fa-user mr-2 text-green-500 flex-shrink-0"></i>
+              <i class="fa-solid fa-circle text-[8px] text-emerald-500 mr-2 flex-shrink-0"></i>
               <span class="truncate">${u.displayName}</span>
             </button>
           `;
         } else if (hasPending) {
           div.innerHTML = `
-            <span class="truncate text-slate-400 flex items-center gap-1 min-w-0">
+            <span class="truncate text-slate-400 flex items-center gap-1.5 min-w-0">
               <i class="fa-regular fa-user flex-shrink-0"></i>
               <span class="truncate">${u.displayName}</span>
             </span>
-            <span class="text-[10px] text-amber-500 flex-shrink-0 font-normal">申請中</span>
+            <span class="text-[10px] text-amber-500 flex-shrink-0 font-semibold">申請中</span>
           `;
         } else {
           div.innerHTML = `
-            <span class="truncate text-slate-400 flex items-center gap-1 min-w-0 mr-2">
+            <span class="truncate text-slate-500 dark:text-slate-400 flex items-center gap-1.5 min-w-0 mr-2">
               <i class="fa-regular fa-user flex-shrink-0"></i>
               <span class="truncate">${u.displayName}</span>
             </span>
-            <button onclick="requestDirectChat('${u.displayName}')" class="text-[10px] bg-sky-100 text-sky-600 dark:bg-sky-900/60 dark:text-sky-300 px-2 py-1 rounded hover:bg-sky-200 flex-shrink-0">申請</button>
+            <button onclick="requestDirectChat('${u.displayName}')" class="text-[10px] bg-sky-100 text-sky-700 dark:bg-sky-900/60 dark:text-sky-300 px-2 py-0.5 rounded hover:bg-sky-200 flex-shrink-0 font-semibold">申請</button>
           `;
         }
         container.appendChild(div);
@@ -718,14 +801,15 @@
         info.innerText = `${m.sender} (${m.senderRealName || ''})`;
 
         const bubble = document.createElement('div');
-        bubble.className = `max-w-[75%] p-3 rounded-2xl text-sm ${
+        bubble.className = `max-w-[80%] sm:max-w-[70%] p-3 rounded-2xl text-xs sm:text-sm ${
           isMe 
-            ? 'bg-sky-600 text-white rounded-br-none' 
-            : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none'
+            ? 'bg-sky-600 text-white rounded-br-none shadow-sm' 
+            : 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white rounded-bl-none border border-slate-200 dark:border-slate-600'
         }`;
 
         if(m.text) {
           const p = document.createElement('p');
+          p.className = "whitespace-pre-wrap break-words";
           p.innerText = m.text;
           bubble.appendChild(p);
         }
@@ -733,7 +817,7 @@
         if(m.image) {
           const img = document.createElement('img');
           img.src = m.image;
-          img.className = "mt-2 rounded-lg max-h-48 object-cover cursor-pointer";
+          img.className = "mt-2 rounded-lg max-h-48 object-cover cursor-pointer hover:opacity-90";
           img.onclick = () => {
             document.getElementById('lightboxImg').src = m.image;
             toggleModal('imageModal', true);
